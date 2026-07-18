@@ -1,0 +1,39 @@
+name: 我的M3U源自动检测生成订阅
+on:
+  workflow_dispatch: # 支持手动点击运行
+  schedule:
+    - cron: '0 12 * * *' # 每日自动运行一次
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装依赖并检测源
+        run: |
+          pip install requests
+          python -c "
+import requests
+with open('my_source.m3u','r',encoding='utf-8') as f:
+    lines = f.readlines()
+valid = []
+for line in lines:
+    line = line.strip()
+    if line.startswith('http'):
+        try:
+            r = requests.get(line, timeout=5, headers={'User-Agent':'Mozilla/5.0'}, stream=True)
+            if r.status_code == 200 and b'#EXTM3U' in next(r.iter_content(50)):
+                valid.append(line)
+        except:
+            pass
+with open('valid_sub.m3u','w',encoding='utf-8') as f:
+    f.write('#EXTM3U\n')
+    for u in valid:
+        f.write(f'#EXTINF:-1,可用源\n{u}\n')
+"
+      - name: 提交生成的订阅文件
+        run: |
+          git config user.name "actions"
+          git config user.email "a@a.com"
+          git add valid_sub.m3u
+          git commit -m "update valid sources" || echo "无更新"
+          git push
