@@ -1,66 +1,22 @@
-name: 我的M3U源自动检测生成订阅
-
+name: M3U Checker
 on:
-  workflow_dispatch: # 支持手动点击运行
+  workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *' # 每日北京时间20点自动运行
-
+    - cron: '0 12 * * *'
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: 拉取代码
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: 安装依赖并检测源
+      - name: Run Check
         run: |
           pip install requests
-          python3 << 'EOF'
-import requests
-import os
-
-source_file = 'my_source.m3u'
-output_file = 'valid_sub.m3u'
-
-if not os.path.exists(source_file):
-    print(f'错误: 找不到文件 {source_file}')
-    exit(1)
-
-with open(source_file, 'r', encoding='utf-8') as f:
-    lines = f.readlines()
-
-valid_urls = []
-print('开始检测...')
-
-for line in lines:
-    line = line.strip()
-    if line.startswith('http'):
-        try:
-            r = requests.get(line, timeout=5, headers={'User-Agent': 'Mozilla/5.0'}, stream=True)
-            if r.status_code == 200:
-                content_start = next(r.iter_content(50))
-                if b'#EXTM3U' in content_start or b'#EXTINF' in content_start:
-                    valid_urls.append(line)
-                    print(f'有效: {line}')
-                else:
-                    print(f'无效(非M3U): {line}')
-            else:
-                print(f'无效(状态码{r.status_code}): {line}')
-        except Exception as e:
-            print(f'超时或错误: {line}')
-
-with open(output_file, 'w', encoding='utf-8') as f:
-    f.write('#EXTM3U\n')
-    for url in valid_urls:
-        f.write(f'#EXTINF:-1,Valid Source\n{url}\n')
-
-print(f'检测完成，共找到 {len(valid_urls)} 个有效源')
-EOF
-
-      - name: 提交生成的订阅文件
+          python3 check_script.py
+      - name: Commit
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "actions"
+          git config user.email "a@a.com"
           git add valid_sub.m3u
-          git commit -m "auto update valid m3u sources" || echo "No changes to commit"
+          git commit -m "update" || echo "no change"
           git push
