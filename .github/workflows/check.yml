@@ -1,22 +1,32 @@
 name: M3U Checker
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 12 * * *'
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
       - name: Run Check
         run: |
           pip install requests
           python3 check_script.py
-      - name: Commit
-        run: |
-          git config user.name "actions"
-          git config user.email "a@a.com"
-          git add valid_sub.m3u
-          git commit -m "update" || echo "no change"
-          git push
+
+      - name: Commit & Push
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: actions
+          author_email: a@a.com
+          message: update
+          add: valid_sub.m3u
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
