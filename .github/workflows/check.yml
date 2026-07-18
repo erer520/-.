@@ -3,7 +3,7 @@ name: 我的M3U源自动检测生成订阅
 on:
   workflow_dispatch: # 支持手动点击运行
   schedule:
-    - cron: '0 12 * * *' # 每日北京时间20点自动运行一次 (UTC 12:00)
+    - cron: '0 12 * * *' # 每日北京时间20点自动运行
 
 jobs:
   check:
@@ -15,7 +15,7 @@ jobs:
       - name: 安装依赖并检测源
         run: |
           pip install requests
-          python3 -c "
+          python3 << 'EOF'
 import requests
 import os
 
@@ -55,7 +55,7 @@ with open(output_file, 'w', encoding='utf-8') as f:
         f.write(f'#EXTINF:-1,Valid Source\n{url}\n')
 
 print(f'检测完成，共找到 {len(valid_urls)} 个有效源')
-"
+EOF
 
       - name: 提交生成的订阅文件
         run: |
