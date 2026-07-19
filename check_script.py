@@ -13,7 +13,7 @@ SOURCE_FILE = 'my_source.m3u'
 OUTPUT_FILE = 'valid_sub_per_channel.m3u'
 
 # 调整这些参数以兼顾速度与可靠性
-WORKERS = 99        # 全局线程池总线程数（根据机器/带宽调整）
+WORKERS = 50        # 全局线程池总线程数（根据机器/带宽调整）
 TIMEOUT = 6          # 单个请求超时（秒）
 READ_BYTES = 512     # 读取少量字节判断内容
 HEAD_FIRST = True    # 先试 HEAD（若服务支持可省流量）
