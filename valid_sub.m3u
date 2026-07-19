@@ -1,31 +1,39 @@
 #EXTM3U
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Hannakeyn"
+#EXTINF:-1,playlist
+https://live-edge45-rn.bcvcdn.com/hls/stream_LucianaMeca/playlist.m3u8
+#EXTINF:-1,playlist
+https://live-edge41-rn.bcvcdn.com/hls/stream_nana7777/playlist.m3u8
+#EXTINF:-1,playlist
 https://live-edge40-rn.bcvcdn.com/hls/stream_Hannakeyn/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Looonacom"
+#EXTINF:-1,playlist
 https://live-edge8-rn.bcvcdn.com/hls/stream_Looonacom/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Nezukoo"
-https://live-edge64-rn.bcvcdn.com/hls/stream_Nezukoo/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="-LeiaProseccina-"
+#EXTINF:-1,playlist
 https://live-edge22-rn.bcvcdn.com/hls/stream_-LeiaProseccina-/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="mananavaleeva"
+#EXTINF:-1,playlist
 https://live-edge78-rn.bcvcdn.com/hls/stream_mananavaleeva/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Wild-Angel777"
+#EXTINF:-1,playlist
 https://live-edge3-rn.bcvcdn.com/hls/stream_Wild-Angel777/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="-SweetNatali-"
+#EXTINF:-1,playlist
 https://live-edge23-rn.bcvcdn.com/hls/stream_-SweetNatali-/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Belosnezhka"
+#EXTINF:-1,playlist
+https://live-edge64-rn.bcvcdn.com/hls/stream_FireMichelle/playlist.m3u8
+#EXTINF:-1,playlist
+https://live-edge12-rn.bcvcdn.com/hls/stream_crazyanna9/playlist.m3u8
+#EXTINF:-1,playlist
 https://live-edge74-rn.bcvcdn.com/hls/stream_Belosnezhka/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="AlaraMyst"
+#EXTINF:-1,playlist
 https://live-edge69-rn.bcvcdn.com/hls/stream_AlaraMyst/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="-Smetanka-"
+#EXTINF:-1,playlist
+https://live-edge79-rn.bcvcdn.com/hls/stream_Sonya-reallsugar/playlist.m3u8
+#EXTINF:-1,playlist
 https://live-edge5-rn.bcvcdn.com/hls/stream_-Smetanka-/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="LunaMystyque"
+#EXTINF:-1,playlist
+https://live-edge31-rn.bcvcdn.com/hls/stream_-Smetanka-/playlist.m3u8
+#EXTINF:-1,playlist
 https://live-edge20-rn.bcvcdn.com/hls/stream_LunaMystyque/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="-Costa-rica-"
-https://live-edge40-rn.bcvcdn.com/hls/stream_-Costa-rica-/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="LittleSammy"
+#EXTINF:-1,playlist
+https://live-edge69-rn.bcvcdn.com/hls/stream_-Costa-rica-/playlist.m3u8
+#EXTINF:-1,playlist
 https://live-edge3-rn.bcvcdn.com/hls/stream_LittleSammy/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="DianaBeautyX"
-https://live-edge16-rn.bcvcdn.com/hls/stream_DianaBeautyX/playlist.m3u8
-#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="minnie-joy"
+#EXTINF:-1,playlist
 https://live-edge71-rn.bcvcdn.com/hls/stream_minnie-joy/playlist.m3u8
