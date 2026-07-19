@@ -1,31 +1,31 @@
 #EXTM3U
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Hannakeyn"
 https://live-edge40-rn.bcvcdn.com/hls/stream_Hannakeyn/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Looonacom"
 https://live-edge8-rn.bcvcdn.com/hls/stream_Looonacom/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Nezukoo"
 https://live-edge64-rn.bcvcdn.com/hls/stream_Nezukoo/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="-LeiaProseccina-"
 https://live-edge22-rn.bcvcdn.com/hls/stream_-LeiaProseccina-/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="mananavaleeva"
 https://live-edge78-rn.bcvcdn.com/hls/stream_mananavaleeva/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Wild-Angel777"
 https://live-edge3-rn.bcvcdn.com/hls/stream_Wild-Angel777/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="-SweetNatali-"
 https://live-edge23-rn.bcvcdn.com/hls/stream_-SweetNatali-/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="Belosnezhka"
 https://live-edge74-rn.bcvcdn.com/hls/stream_Belosnezhka/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="AlaraMyst"
 https://live-edge69-rn.bcvcdn.com/hls/stream_AlaraMyst/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="-Smetanka-"
 https://live-edge5-rn.bcvcdn.com/hls/stream_-Smetanka-/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="LunaMystyque"
 https://live-edge20-rn.bcvcdn.com/hls/stream_LunaMystyque/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="-Costa-rica-"
 https://live-edge40-rn.bcvcdn.com/hls/stream_-Costa-rica-/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="LittleSammy"
 https://live-edge3-rn.bcvcdn.com/hls/stream_LittleSammy/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="DianaBeautyX"
 https://live-edge16-rn.bcvcdn.com/hls/stream_DianaBeautyX/playlist.m3u8
-#EXTINF:-1,playlist
+#EXTINF:-1 tvg-id="AlaraMyst" tvg-name="minnie-joy"
 https://live-edge71-rn.bcvcdn.com/hls/stream_minnie-joy/playlist.m3u8
