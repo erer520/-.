@@ -10,7 +10,7 @@ from urllib.parse import urlparse, urlunparse, unquote, unquote_plus
 # 配置（按需调整）
 SOURCE_FILE = 'my_source.m3u'
 OUTPUT_FILE = 'valid_sub.m3u'
-WORKERS = 50           # 并发线程数
+WORKERS = 50           # 并发线程数（单个组内部最大线程数）
 TIMEOUT = 6            # 单个请求超时（秒)
 READ_BYTES = 1024      # 读取判断用的字节数
 HEAD_FIRST = True      # 先尝试 HEAD 请求（可节省流量）
@@ -24,7 +24,7 @@ NORMALIZE_STRIP_QUERY = False
 
 # 输出 extinf 模板（按需修改）
 # Example: #EXTINF:-1 logo="" group-title="" ,milf
-EXTINF_TEMPLATE = '#EXTINF:-1 logo=\"\" group-title=\"\" ,{name}\n'
+EXTINF_TEMPLATE = '#EXTINF:-1 logo="" group-title="" ,{name}\n'
 
 def is_m3u8_content_type(resp):
     ctype = resp.headers.get('Content-Type', '').lower()
@@ -155,92 +155,128 @@ def main():
         print("Source file not found, wrote empty playlist.")
         return
 
-    # 解析输入文件，配对 #EXTINF 与 URL（保留原始 extinf 名称或从 URL 生成）
-    entries = []  # list of (orig_url, preferred_name, original_extinf_line or None)
+    # 解析输入文件，按照组（group）收集：每个 #EXTINF 开始一个组，后续的若干 URL 被视为同组的备用地址。
+    # 没有 #EXTINF 的单独 URL 也作为单独组处理。
+    groups = []  # list of {'name':..., 'extinf':..., 'urls':[...]} 保持原始出现顺序
+    seen_orig = set()
+
     with open(SOURCE_FILE, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     i = 0
-    seen_orig = set()
+    current_group = None
     while i < len(lines):
         line = lines[i].rstrip('\n')
         stripped = line.strip()
         if stripped.startswith('#EXTINF'):
+            # 开始新组
             extinf = line
             name = extract_name_from_extinf(extinf)
-            j = i + 1
-            while j < len(lines) and lines[j].strip() == '':
-                j += 1
-            if j < len(lines):
-                url_line = lines[j].strip()
-                if url_line.lower().startswith('http'):
-                    url = url_line
+            preferred_name = sanitize_name(name) if name else None
+            current_group = {'name': preferred_name, 'extinf': extinf, 'urls': []}
+            i += 1
+            # 收集紧跟其后的 URL 行，直到遇到下一个 #EXTINF 或空的注释行
+            while i < len(lines):
+                nxt = lines[i].strip()
+                if nxt.startswith('#EXTINF'):
+                    break
+                if nxt.lower().startswith('http'):
+                    url = nxt
                     if url not in seen_orig:
                         seen_orig.add(url)
-                        preferred_name = sanitize_name(name) if name else title_from_url(url)
-                        entries.append((url, preferred_name, extinf))
-                    i = j + 1
+                        current_group['urls'].append(url)
+                    i += 1
+                    # 继续收集，允许多条 URL 属于同一组
                     continue
-            i += 1
+                # 如果是空行或其他注释，跳过并继续
+                i += 1
+            # 如果这个组没有 URL（非常规），则忽略
+            if current_group['urls']:
+                groups.append(current_group)
+            current_group = None
+            continue
         elif stripped.lower().startswith('http'):
+            # 单独 URL，作为单独组
             url = stripped
             if url not in seen_orig:
                 seen_orig.add(url)
-                preferred_name = title_from_url(url)
-                entries.append((url, preferred_name, None))
+                groups.append({'name': None, 'extinf': None, 'urls': [url]})
             i += 1
         else:
             i += 1
 
-    if not entries:
+    if not groups:
         with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
             f.write('#EXTM3U\n')
         print("No URLs found in source file, wrote empty playlist.")
         return
 
-    # 并行校验所有 entries，收集最终 URL（或 None）
-    results = {}  # orig_url -> final_url or None
-    with ThreadPoolExecutor(max_workers=WORKERS) as ex:
-        futures = {ex.submit(check_url_return_final, url): url for (url, _, _) in entries}
-        for fut in as_completed(futures):
-            orig = futures[fut]
+    # 针对每个组并行检测其内部的 URL，但每组一旦检测到第一个有效 URL，立即切换到下一组（停止处理该组剩余 URL）
+    group_results = []  # list of (final_url, preferred_name, orig_extinf)
+
+    for gidx, group in enumerate(groups, start=1):
+        urls = group['urls']
+        preferred_name = group['name']
+        orig_extinf = group['extinf']
+
+        print(f"Checking group {gidx}/{len(groups)} with {len(urls)} url(s)")
+
+        final_for_group = None
+        final_checked_url = None
+
+        # 使用一个临时线程池检测组内 URL（上限为 WORKERS 或 url 数量）
+        with ThreadPoolExecutor(max_workers=min(WORKERS, max(1, len(urls)))) as ex:
+            futures = {ex.submit(check_url_return_final, url): url for url in urls}
             try:
-                final = fut.result()
-                results[orig] = final
-                if final:
-                    print("OK:", orig, "->", final)
-                else:
-                    print("Bad:", orig)
-            except Exception as e:
-                results[orig] = None
-                print("Error checking:", orig, e)
+                for fut in as_completed(futures):
+                    orig = futures[fut]
+                    try:
+                        final = fut.result()
+                        if final:
+                            final_for_group = final
+                            final_checked_url = orig
+                            print("Group OK:", orig, "->", final)
+                            # 找到一个有效后，尝试取消还未开始的 futures
+                            for other_fut in futures:
+                                if other_fut is not fut:
+                                    try:
+                                        other_fut.cancel()
+                                    except Exception:
+                                        pass
+                            break
+                        else:
+                            print("Bad:", orig)
+                    except Exception as e:
+                        print("Error checking:", orig, e)
+                # 退出时，未被处理或被取消的 futures 会被忽略
+            except Exception:
+                pass
+
+        if final_for_group:
+            group_results.append((final_for_group, preferred_name, orig_extinf))
+        else:
+            print(f"Group {gidx} has no valid url, skipping.")
 
     # 写输出时按最终 URL 去重（保留第一次出现的名称）
     emitted_final = set()
     emitted_names = {}  # name -> count (用于避免重复名称)
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write('#EXTM3U\n')
-        for orig_url, preferred_name, orig_extinf in entries:
-            final = results.get(orig_url)
-            if not final:
-                continue
-            key = final
+        for final_url, preferred_name, orig_extinf in group_results:
+            key = final_url
             if DEDUPE_BY_FINAL_URL:
-                key = normalize_url_for_dedupe(final)
-            # 如果已经写过相同最终 URL，就跳过
+                key = normalize_url_for_dedupe(final_url)
             if key in emitted_final:
                 continue
             emitted_final.add(key)
 
-            # 确保频道名唯一（若重复则追加序号）
-            name = sanitize_name(preferred_name or title_from_url(final))
+            name = sanitize_name(preferred_name or title_from_url(final_url))
             count = emitted_names.get(name, 0) + 1
             emitted_names[name] = count
             out_name = name if count == 1 else f"{name} - {count}"
 
-            # 写入 extinf（使用模板，格式示例: #EXTINF:-1 logo=\"\" group-title=\"\" ,ChannelName）
             f.write(EXTINF_TEMPLATE.format(name=out_name))
-            f.write(final + '\n')
+            f.write(final_url + '\n')
 
     print("Done. Valid unique count:", len(emitted_final))
 
