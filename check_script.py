@@ -5,13 +5,13 @@ import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from urllib.parse import urlparse, urlunquote, unquote
+from urllib.parse import urlparse, urlunparse, unquote, unquote_plus
 
 # 配置（按需调整）
 SOURCE_FILE = 'my_source.m3u'
 OUTPUT_FILE = 'valid_sub.m3u'
 WORKERS = 50           # 并发线程数
-TIMEOUT = 6            # 单个请求超时（秒）
+TIMEOUT = 6            # 单个请求超时（秒)
 READ_BYTES = 1024      # 读取判断用的字节数
 HEAD_FIRST = True      # 先尝试 HEAD 请求（可节省流量）
 RETRIES = 0            # urllib3 Retry 总重试次数
@@ -24,7 +24,7 @@ NORMALIZE_STRIP_QUERY = False
 
 # 输出 extinf 模板（按需修改）
 # Example: #EXTINF:-1 logo="" group-title="" ,milf
-EXTINF_TEMPLATE = '#EXTINF:-1 logo=\"\" group-title=\"\" ,{name}\n'
+EXTINF_TEMPLATE = '#EXTINF:-1 logo="" group-title="" ,{name}\n'
 
 def is_m3u8_content_type(resp):
     ctype = resp.headers.get('Content-Type', '').lower()
@@ -45,6 +45,7 @@ def normalize_url_for_dedupe(url):
         path = p.path.rstrip('/')
         query = '' if NORMALIZE_STRIP_QUERY else p.query
         # fragment removed intentionally
+        # 使用 urlunparse 重新构造
         norm = urlunparse((scheme, netloc, path or '/', '', query, ''))
         return norm
     except Exception:
