@@ -5,7 +5,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from urllib.parse import urlparse, urlunparse, unquote
+from urllib.parse import urlparse, urlunquote, unquote
 
 # 配置（按需调整）
 SOURCE_FILE = 'my_source.m3u'
@@ -24,7 +24,7 @@ NORMALIZE_STRIP_QUERY = False
 
 # 输出 extinf 模板（按需修改）
 # Example: #EXTINF:-1 logo="" group-title="" ,milf
-EXTINF_TEMPLATE = '#EXTINF:-1 logo="" group-title="" ,{name}\n'
+EXTINF_TEMPLATE = '#EXTINF:-1 logo=\"\" group-title=\"\" ,{name}\n'
 
 def is_m3u8_content_type(resp):
     ctype = resp.headers.get('Content-Type', '').lower()
@@ -237,7 +237,7 @@ def main():
             emitted_names[name] = count
             out_name = name if count == 1 else f"{name} - {count}"
 
-            # 写入 extinf（使用模板，格式示例: #EXTINF:-1 logo="" group-title="" ,ChannelName）
+            # 写入 extinf（使用模板，格式示例: #EXTINF:-1 logo=\"\" group-title=\"\" ,ChannelName）
             f.write(EXTINF_TEMPLATE.format(name=out_name))
             f.write(final + '\n')
 
