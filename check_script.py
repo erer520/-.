@@ -23,7 +23,7 @@ NORMALIZE_STRIP_QUERY = False
 
 # 输出 extinf 模板（按需修改）
 # Example: #EXTINF:-1 logo="" group-title="" ,milf
-EXTINF_TEMPLATE = '#EXTINF:-1 logo="" group-title="" ,{name}\n'
+EXTINF_TEMPLATE = '#EXTINF:-1 logo=\"\" group-title=\"\" ,{name}\n'
 
 def is_m3u8_content_type(resp):
     ctype = resp.headers.get('Content-Type', '').lower()
