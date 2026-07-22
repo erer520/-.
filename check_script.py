@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
@@ -23,7 +24,7 @@ NORMALIZE_STRIP_QUERY = False
 
 # 输出 extinf 模板（按需修改）
 # Example: #EXTINF:-1 logo="" group-title="" ,milf
-EXTINF_TEMPLATE = '#EXTINF:-1 logo=\"\" group-title=\"\" ,{name}\n'
+EXTINF_TEMPLATE = '#EXTINF:-1 logo="" group-title="" ,{name}\n'
 
 def is_m3u8_content_type(resp):
     ctype = resp.headers.get('Content-Type', '').lower()
@@ -101,8 +102,19 @@ def check_url_return_final(url):
     return None
 
 def title_from_url(url):
+    """
+    优先从 URL path 中按模式提取频道名：
+    - 如果 path 中包含 'stream_<name>/playlist'，则返回 <name>
+    - 否则回退到原有的 basename 提取逻辑（去掉 .m3u8 并将下划线替换为空格）
+
+    例如: '/hls/stream_LucianaMeca/playlist.m3u8' -> 'LucianaMeca'
+    """
     try:
         p = urlparse(url)
+        path = unquote(p.path)
+        m = re.search(r'stream_([^/]+)/playlist', path)
+        if m:
+            return m.group(1)
         name = os.path.basename(unquote(p.path))
         if name:
             name = name.replace('.m3u8', '').replace('_', ' ')
