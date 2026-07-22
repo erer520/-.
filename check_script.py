@@ -39,10 +39,8 @@ def normalize_url_for_dedupe(url):
         netloc = p.netloc.lower()
         path = p.path.rstrip('/')
         query = '' if NORMALIZE_STRIP_QUERY else p.query
-        fragment = '' if NORMALIZE_STRIP_FRAGMENT else p.fragment
-        norm = urlunparse((scheme, netloc, path or '/', '', query, ''))  # fragment removed intentionally
-        # 如果保留 fragment option 为 False，已经去掉了
-        # small cleanup
+        # fragment removed intentionally
+        norm = urlunparse((scheme, netloc, path or '/', '', query, ''))
         return norm
     except Exception:
         return url
@@ -109,6 +107,30 @@ def title_from_url(url):
         pass
     return url
 
+def extract_name_from_extinf(extinf_line):
+    """
+    从 #EXTINF 行提取逗号后面的名称（若有），否则返回 None
+    例如: '#EXTINF:-1,LucianaMeca' -> 'LucianaMeca'
+    """
+    try:
+        if not extinf_line:
+            return None
+        # 找到第一个逗号并提取之后的内容
+        idx = extinf_line.find(',')
+        if idx != -1:
+            name = extinf_line[idx+1:].strip()
+            # 去掉可能的换行
+            name = name.rstrip('\r\n')
+            if name:
+                return name
+    except Exception:
+        pass
+    return None
+
+def sanitize_name(name):
+    # 简单清理，去掉多余空白
+    return ' '.join(name.split())
+
 def main():
     if not os.path.exists(SOURCE_FILE):
         with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
@@ -116,8 +138,8 @@ def main():
         print("Source file not found, wrote empty playlist.")
         return
 
-    # 解析输入文件，配对 #EXTINF 与 URL（保留原始 extinf 行）
-    entries = []  # list of (orig_url, extinf_line)
+    # 解析输入文件，配对 #EXTINF 与 URL（保留原始 extinf 名称或从 URL 生成）
+    entries = []  # list of (orig_url, preferred_name, original_extinf_line or None)
     with open(SOURCE_FILE, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
@@ -128,6 +150,7 @@ def main():
         stripped = line.strip()
         if stripped.startswith('#EXTINF'):
             extinf = line
+            name = extract_name_from_extinf(extinf)
             j = i + 1
             while j < len(lines) and lines[j].strip() == '':
                 j += 1
@@ -135,10 +158,10 @@ def main():
                 url_line = lines[j].strip()
                 if url_line.lower().startswith('http'):
                     url = url_line
-                    # 保留第一次出现的同样 source URL（如果想更宽松去重，可在后面按最终 URL 去重）
                     if url not in seen_orig:
                         seen_orig.add(url)
-                        entries.append((url, extinf))
+                        preferred_name = sanitize_name(name) if name else title_from_url(url)
+                        entries.append((url, preferred_name, extinf))
                     i = j + 1
                     continue
             i += 1
@@ -146,9 +169,8 @@ def main():
             url = stripped
             if url not in seen_orig:
                 seen_orig.add(url)
-                title = title_from_url(url)
-                extinf = f'#EXTINF:-1,{title}'
-                entries.append((url, extinf))
+                preferred_name = title_from_url(url)
+                entries.append((url, preferred_name, None))
             i += 1
         else:
             i += 1
@@ -162,7 +184,7 @@ def main():
     # 并行校验所有 entries，收集最终 URL（或 None）
     results = {}  # orig_url -> final_url or None
     with ThreadPoolExecutor(max_workers=WORKERS) as ex:
-        futures = {ex.submit(check_url_return_final, url): url for (url, _) in entries}
+        futures = {ex.submit(check_url_return_final, url): url for (url, _, _) in entries}
         for fut in as_completed(futures):
             orig = futures[fut]
             try:
@@ -176,11 +198,12 @@ def main():
                 results[orig] = None
                 print("Error checking:", orig, e)
 
-    # 写输出时按最终 URL 去重（保留第一次出现的 extinf）
+    # 写输出时按最终 URL 去重（保留第一次出现的名称）
     emitted_final = set()
+    emitted_names = {}  # name -> count (用于避免重复名称)
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write('#EXTM3U\n')
-        for orig_url, extinf in entries:
+        for orig_url, preferred_name, orig_extinf in entries:
             final = results.get(orig_url)
             if not final:
                 continue
@@ -191,10 +214,15 @@ def main():
             if key in emitted_final:
                 continue
             emitted_final.add(key)
-            # 写入 extinf（保留原始行）并写入最终 URL（推荐写最终 URL）
-            if not extinf.endswith('\n'):
-                extinf = extinf + '\n'
-            f.write(extinf)
+
+            # 确保频道名唯一（若重复则追加序号）
+            name = sanitize_name(preferred_name or title_from_url(final))
+            count = emitted_names.get(name, 0) + 1
+            emitted_names[name] = count
+            out_name = name if count == 1 else f"{name} - {count}"
+
+            # 写入 extinf（使用首选名称或原始 extinf 名；优先使用规范化名称）
+            f.write(f'#EXTINF:-1,{out_name}\n')
             f.write(final + '\n')
 
     print("Done. Valid unique count:", len(emitted_final))
