@@ -16,6 +16,17 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: Print times (debug)
+        run: |
+          echo "--- Debug: recorded times at job start ---"
+          echo "Local time: $(date)"
+          echo "UTC time: $(date -u)"
+          echo "GITHUB_RUN_ID: $GITHUB_RUN_ID"
+          echo "GITHUB_RUN_NUMBER: $GITHUB_RUN_NUMBER"
+          echo "GITHUB_RUN_ATTEMPT: $GITHUB_RUN_ATTEMPT"
+          echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME"
+          echo "--- end debug ---"
+
       - name: Run Check
         run: |
           pip install requests
